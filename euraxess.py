@@ -32,17 +32,22 @@ def extract_all_jobs(base_url, search_url):
     all_jobs = []
     current_url = search_url
 
-    # Removed the page_counter and the loop now only processes the current page
-    soup = fetch_and_parse_url(current_url)
-    if not soup: return all_jobs
+    while current_url:
+        soup = fetch_and_parse_url(current_url)
+        if not soup: break
 
-    job_links = soup.select('article > div > h1 > a')  # Use the accurate selector for job links
-    for link in job_links:
-        job_detail_url = f"{base_url.rstrip('/')}/{link['href'].lstrip('/')}"
-        job_info = extract_job_info(job_detail_url)
-        all_jobs.append(job_info)
+        job_links = soup.select('article > div > h1 > a') 
+        for link in job_links:
+            job_detail_url = f"{base_url.rstrip('/')}/{link['href'].lstrip('/')}"
+            job_info = extract_job_info(job_detail_url)
+            all_jobs.append(job_info)
 
-    # The pagination handling code is removed or commented out to only process the first page
+        next_page_link = soup.select_one('.ecl-pagination__item--next a')
+        if next_page_link:
+            next_page_relative = next_page_link.get('href')
+            current_url = f"{search_url}{next_page_relative}"
+        else:
+            break
 
     return all_jobs
 
